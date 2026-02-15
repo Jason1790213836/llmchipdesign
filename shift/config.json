@@ -1,0 +1,14 @@
+{
+	"general": {
+        "prompt": "./shift_register.sv",
+        "name": "shift_register",
+        "testbench": "./shift_register_tb.v",
+		"model_family": "ChatGPT",
+		"model_id": "gpt-4o-mini",
+		"num_candidates": 5,
+		"iterations": 5,
+        "outdir": "outputs_arbiter",
+        "log": "log.txt",
+		"ensemble": false
+    }
+}
