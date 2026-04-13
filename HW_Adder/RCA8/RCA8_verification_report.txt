@@ -1,0 +1,31 @@
+RCA8 Verification Report
+
+1. Module Name Comparison
+The generated design preserves the same top-level module name RCA8 and includes the FA submodule, matching the golden reference hierarchy.
+
+2. Port Declaration Comparison
+The generated RCA8 module preserves the same input and output interface:
+- inputs: a[7:0], b[7:0]
+- outputs: sum[7:0], cout
+The FA submodule also preserves the expected ports: a, b, cin, sum, cout.
+
+3. Architectural Comparison
+The generated design maintains the ripple-carry architecture. It connects eight 1-bit full adders in series, where the carry-out of each stage feeds the carry-in of the next stage. This matches the signal flow of the golden RCA8 design.
+
+4. Internal Signal Comparison
+The generated design uses an internal carry vector c. The declaration differs slightly from the golden version, but the carry propagation behavior is preserved.
+
+5. Logic Implementation Comparison
+The generated FA module computes:
+- sum = a ^ b ^ cin
+- cout = (a & b) | (cin & (a ^ b))
+This is functionally equivalent to the golden full-adder logic.
+However, the generated code uses assign statements instead of explicit gate-level primitives.
+
+6. Implementation Differences
+- The generated design uses a generate-for loop for the middle full-adder stages.
+- The generated FA module uses assign-based combinational logic rather than primitive gate instantiations.
+- The internal carry declaration differs slightly in style.
+
+7. Assessment of Equivalence
+The generated RCA8 design is functionally equivalent to the golden reference and preserves the same ripple-carry architectural approach. The observed differences are implementation-style variations rather than architectural errors.

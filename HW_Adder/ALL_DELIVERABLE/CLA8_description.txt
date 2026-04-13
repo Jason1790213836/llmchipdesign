@@ -1,0 +1,51 @@
+Based on the following natural language description, generate COMPLETE compilable Verilog code for the exact CLA8 architecture.
+
+STRICT REQUIREMENTS:
+
+1. Include ALL modules described, including:
+   - PGGen module
+   - CLA8 top-level module
+
+2. Preserve EXACT module names:
+   - PGGen
+   - CLA8
+
+3. Preserve EXACT signal names:
+   - g[7:0]
+   - p[7:0]
+   - c[7:0]
+   - e[35:0]
+   - cin
+
+4. Preserve the SAME carry-lookahead architecture exactly as described:
+   - Explicitly compute c[0] through c[7]
+   - Do NOT simplify or rewrite carry equations
+   - Do NOT approximate carry logic
+   - Keep each carry equation structurally expanded
+
+5. Maintain the SAME hierarchical structure:
+   - PGGen submodule instantiated 8 times
+   - CLA8 top module computes carry and sum
+
+6. Use STRUCTURAL Verilog only:
+   - Use gate-level primitives (and, or, xor, buf)
+   - Do NOT use behavioral simplifications
+   - Do NOT use arithmetic operators like +
+
+7. Sum outputs must follow:
+   - sum[0] = p[0] XOR cin
+   - sum[i] = p[i] XOR c[i-1]
+
+8. Final carry-out must be:
+   - cout = c[7]
+
+9. Output FULL Verilog code only.
+Do not include explanations.
+Do not omit any carry equations.
+Do not compress repeated carry terms.
+
+Do not add cin as a module input.
+cin must be declared as an internal wire and driven by `buf (cin, 0);`
+Use the exact carry indexing convention of the original CLA8 design, where c[0] is the carry generated from bit 0 logic, not the external input carry itself.
+
+Generate exact architecture replication, not alternative implementations.

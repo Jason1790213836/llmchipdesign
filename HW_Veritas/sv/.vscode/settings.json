@@ -1,0 +1,8 @@
+{
+  "systemverilog.includeIndexing": ["**/*.{sv,svh,v}"],
+  "systemverilog.excludeIndexing": ["**/tb/**", "**/test/**"],
+  "systemverilog.defines": [],
+  "systemverilog.linter": "iverilog",
+  "systemverilog.launchConfiguration": "iverilog -g2012 -t null",
+  "systemverilog.disableLinting": false
+}
