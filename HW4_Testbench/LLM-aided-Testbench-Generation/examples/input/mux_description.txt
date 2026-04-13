@@ -1,0 +1,14 @@
+A 2-to-1 multiplexer (MUX).
+
+The module takes two 1-bit input signals (a and b) and one 1-bit select signal (sel).
+
+Functionality:
+- Input 'a': First data input (1-bit)
+- Input 'b': Second data input (1-bit)
+- Input 'sel': Select signal (1-bit)
+- Output 'y': Selected output (1-bit)
+
+When sel is 0, the output y should be equal to input a.
+When sel is 1, the output y should be equal to input b.
+
+This is a combinational logic circuit with no state or memory.

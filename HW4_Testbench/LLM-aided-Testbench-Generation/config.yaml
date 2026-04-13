@@ -1,0 +1,21 @@
+# Configuration file for LLM-aided Testbench Generation
+
+# LLM Provider Settings
+llm:
+  provider: "openai"  # Options: openai, anthropic
+  model: "gpt-4"      # Model name (e.g., gpt-4, gpt-3.5-turbo, claude-2)
+  temperature: 0.3    # Lower temperature for more deterministic outputs
+  max_tokens: 4000    # Maximum tokens per generation
+
+# Generation Settings
+generation:
+  output_dir: "examples/output"
+  save_intermediate: true  # Save intermediate files (initial testbench, python model, etc.)
+  
+# Testbench Settings
+testbench:
+  include_summary: true   # Include test summary at the end
+  verbose_output: true    # Include detailed output in testbench
+  
+# API Key (can be set via environment variable OPENAI_API_KEY)
+# api_key: "your-api-key-here"

@@ -1,0 +1,12 @@
+A simple 4-bit adder module.
+
+The module takes two 4-bit input signals (a and b) and produces a 4-bit sum output and a 1-bit carry output.
+
+Functionality:
+- Input 'a': 4-bit unsigned number
+- Input 'b': 4-bit unsigned number  
+- Output 'sum': 4-bit result of a + b (lower 4 bits)
+- Output 'carry': 1-bit carry-out flag (set to 1 if result exceeds 15)
+
+The adder performs unsigned addition of the two 4-bit inputs.
+If the result is greater than 15 (0xF), the carry output should be set to 1.
