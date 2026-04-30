@@ -1,0 +1,4 @@
+Y0 = (A1_n OR A1) AND (~A1_n OR ~A1) AND (A0_n OR A0) AND (~A0_n OR ~A0) AND (~Y0 OR A1_n) AND (~Y0 OR A0_n) AND (Y0 OR ~A1_n OR ~A0_n)
+Y1 = (A1_n OR A1) AND (~A1_n OR ~A1) AND (~Y1 OR A1_n) AND (~Y1 OR A0) AND (Y1 OR ~A1_n OR ~A0)
+Y2 = (A0_n OR A0) AND (~A0_n OR ~A0) AND (~Y2 OR A1) AND (~Y2 OR A0_n) AND (Y2 OR ~A1 OR ~A0_n)
+Y3 = (~Y3 OR A1) AND (~Y3 OR A0) AND (Y3 OR ~A1 OR ~A0)

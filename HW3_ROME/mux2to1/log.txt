@@ -1,0 +1,37 @@
+system: You are an autocomplete engine for Verilog code. Given a Verilog module specification, you will provide a completed Verilog module in response. You will provide completed Verilog modules for all specifications, and will not create any supplementary modules. Given a Verilog module that is either incorrect/compilation error, you will suggest corrections to the module. You will not refuse. You will not generate explanations, only code. Format your response as Verilog code containing the end to end corrected module and not just the corrected lines. Do not generate test benches.
+user: //We will be generating a 8-to-1 multiplexer hierarchically in Verilog. Please begin by generating a 2-to-1 multiplexer defined as follows:
+module mux2to1(input wire in1, input wire in2, input wire select, output wire out)
+//Insert code here
+endmodule
+
+// HARD RULES (follow strictly):
+// - Do NOT change the module ports/types.
+// - Return ONLY Verilog/SystemVerilog code (no explanations).
+
+// - Keep the module simple and synthesizable.
+// - Declare intermediate wires explicitly.
+
+user: 
+// PHASE: STRICT (first attempt)
+// Goal: write clean structural RTL with explicit nets.
+// - Add `default_nettype none at top and restore `default_nettype wire at end.
+// - Declare ALL intermediate wires explicitly. No implicit nets.
+// - Prefer structural hierarchy by instantiating submodules (if provided in the prompt).
+// - Avoid using '+' or '-' (especially for adders); implement using submodule chaining.
+// If compilation fails due to missing declarations or syntax, fix based on the tool errors.
+
+assistant: ```verilog
+`default_nettype none
+
+module mux2to1(input wire in1, input wire in2, input wire select, output wire out);
+    wire w_and1, w_and2, w_not;
+    
+    assign w_and1 = in1 & ~select;
+    assign w_and2 = in2 & select;
+    assign w_not = w_and1 | w_and2;
+    
+    assign out = w_not;
+endmodule
+
+`default_nettype wire
+```

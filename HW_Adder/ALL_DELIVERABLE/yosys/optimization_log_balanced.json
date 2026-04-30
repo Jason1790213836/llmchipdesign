@@ -1,0 +1,100 @@
+{
+  "mode": "balanced",
+  "best_ppa": {
+    "area_um2": 69.426,
+    "cell_count": 37,
+    "logic_levels": 217.38
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "ppa": {
+        "area_um2": 69.426,
+        "cell_count": 37,
+        "logic_levels": 217.55
+      },
+      "file": "balanced_candidate_1.v"
+    },
+    {
+      "iteration": 2,
+      "ppa": {
+        "area_um2": 69.426,
+        "cell_count": 37,
+        "logic_levels": 217.38
+      },
+      "file": "balanced_candidate_2.v"
+    },
+    {
+      "iteration": 3,
+      "ppa": {
+        "area_um2": 58.52,
+        "cell_count": 42,
+        "logic_levels": 163.22
+      },
+      "file": "balanced_candidate_3.v"
+    },
+    {
+      "iteration": 4,
+      "ppa": {
+        "area_um2": 56.392,
+        "cell_count": 40,
+        "logic_levels": 264.68
+      },
+      "file": "balanced_candidate_4.v"
+    },
+    {
+      "iteration": 5,
+      "ppa": {
+        "area_um2": 60.382,
+        "cell_count": 41,
+        "logic_levels": 371.65
+      },
+      "file": "balanced_candidate_5.v"
+    },
+    {
+      "iteration": 6,
+      "ppa": {
+        "area_um2": 69.426,
+        "cell_count": 37,
+        "logic_levels": 217.38
+      },
+      "file": "balanced_candidate_6.v"
+    },
+    {
+      "iteration": 7,
+      "ppa": {
+        "area_um2": 58.52,
+        "cell_count": 42,
+        "logic_levels": 163.22
+      },
+      "file": "balanced_candidate_7.v"
+    },
+    {
+      "iteration": 8,
+      "ppa": {
+        "area_um2": 60.382,
+        "cell_count": 41,
+        "logic_levels": 371.65
+      },
+      "file": "balanced_candidate_8.v"
+    },
+    {
+      "iteration": 9,
+      "ppa": {
+        "area_um2": 69.426,
+        "cell_count": 37,
+        "logic_levels": 217.38
+      },
+      "file": "balanced_candidate_9.v"
+    },
+    {
+      "iteration": 10,
+      "ppa": {
+        "area_um2": 69.426,
+        "cell_count": 37,
+        "logic_levels": 217.38
+      },
+      "file": "balanced_candidate_10.v"
+    }
+  ]
+}

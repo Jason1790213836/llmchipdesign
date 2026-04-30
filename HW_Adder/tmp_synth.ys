@@ -1,0 +1,10 @@
+
+read_verilog cla_delay/delay_candidate_10.v
+hierarchy -check -top CLA8
+flatten
+proc; opt; fsm; opt; memory; opt
+techmap; opt
+dfflibmap -liberty nangate45.lib
+abc -liberty nangate45.lib -script abc.script
+clean
+stat -top CLA8 -liberty nangate45.lib

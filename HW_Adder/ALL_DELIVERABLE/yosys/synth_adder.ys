@@ -1,0 +1,9 @@
+read_verilog RCA8/RCA8_generated.v
+hierarchy -check -top RCA8
+flatten
+proc; opt; fsm; opt; memory; opt
+techmap; opt
+dfflibmap -liberty nangate45.lib
+abc -liberty nangate45.lib -script abc.script
+clean
+stat -top RCA8 -liberty nangate45.lib

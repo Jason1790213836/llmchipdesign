@@ -1,0 +1,102 @@
+{
+  "baseline": "CLA8/CLA8_generated.v",
+  "top_module": "CLA8",
+  "mode": "delay",
+  "best_ppa": {
+    "area_um2": 73.948,
+    "cell_count": 42,
+    "logic_levels": 168.33
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "ppa": {
+        "area_um2": 54.796,
+        "cell_count": 39,
+        "logic_levels": 240.9
+      },
+      "file": "cla_delay/delay_candidate_1.v"
+    },
+    {
+      "iteration": 2,
+      "ppa": {
+        "area_um2": 67.564,
+        "cell_count": 37,
+        "logic_levels": 201.71
+      },
+      "file": "cla_delay/delay_candidate_2.v"
+    },
+    {
+      "iteration": 3,
+      "ppa": {
+        "area_um2": 69.958,
+        "cell_count": 37,
+        "logic_levels": 206.54
+      },
+      "file": "cla_delay/delay_candidate_3.v"
+    },
+    {
+      "iteration": 4,
+      "ppa": {
+        "area_um2": 73.948,
+        "cell_count": 42,
+        "logic_levels": 168.33
+      },
+      "file": "cla_delay/delay_candidate_4.v"
+    },
+    {
+      "iteration": 5,
+      "ppa": {
+        "area_um2": 67.564,
+        "cell_count": 37,
+        "logic_levels": 201.71
+      },
+      "file": "cla_delay/delay_candidate_5.v"
+    },
+    {
+      "iteration": 6,
+      "ppa": {
+        "area_um2": 73.948,
+        "cell_count": 42,
+        "logic_levels": 168.33
+      },
+      "file": "cla_delay/delay_candidate_6.v"
+    },
+    {
+      "iteration": 7,
+      "ppa": {
+        "area_um2": 69.958,
+        "cell_count": 37,
+        "logic_levels": 206.54
+      },
+      "file": "cla_delay/delay_candidate_7.v"
+    },
+    {
+      "iteration": 8,
+      "ppa": {
+        "area_um2": 67.564,
+        "cell_count": 37,
+        "logic_levels": 201.71
+      },
+      "file": "cla_delay/delay_candidate_8.v"
+    },
+    {
+      "iteration": 9,
+      "ppa": {
+        "area_um2": 68.628,
+        "cell_count": 37,
+        "logic_levels": 204.12
+      },
+      "file": "cla_delay/delay_candidate_9.v"
+    },
+    {
+      "iteration": 10,
+      "ppa": {
+        "area_um2": 56.658,
+        "cell_count": 43,
+        "logic_levels": 259.54
+      },
+      "file": "cla_delay/delay_candidate_10.v"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+Design: RCA8
+Top module: RCA8
+Baseline synthesis results:
+- Area: 44.954 um²
+- Cell count: 37
+- Logic levels: unavailable (not reported by Yosys 0.9 setup)
+
+Expected baseline JSON should include area_um2, cell_count, and logic_levels. In the current Yosys 0.9 environment, the provided script fails at sta, so only area and cell count can be reliably extracted; logic_levels is not reported by the toolchain in this setup
+“Because the current Yosys 0.9 + ABC flow does not reliably expose logic-level depth for this design space, delay was measured using the ABC-reported critical-path delay in picoseconds. Therefore, the three optimization modes were implemented using delay_ps thresholds instead of logic-level thresholds. This preserves the intended tradeoff study between area-oriented, delay-oriented, and balanced optimization.”

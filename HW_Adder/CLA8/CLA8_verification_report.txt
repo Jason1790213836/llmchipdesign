@@ -1,0 +1,47 @@
+CLA8 Verification Report
+
+Module Name Comparison
+The generated design preserves the same module names as the golden reference: PGGen and CLA8. This matches the original hierarchical structure.
+Port Declaration Comparison
+The generated CLA8 module preserves the same top-level input and output interface:
+inputs: a[7:0], b[7:0]
+outputs: sum[7:0], cout
+
+The PGGen submodule also preserves the expected ports: a, b, g, p.
+Although the declaration order of PGGen ports differs slightly from the golden version, the port names and directions remain correct.
+
+Architectural Comparison
+The generated design maintains the carry-lookahead adder architecture. It first computes generate (g) and propagate (p) signals for each bit using eight PGGen instances, then explicitly expands carry-lookahead equations for c[0] through c[7], and finally computes each sum bit using XOR logic. This matches the signal flow and datapath structure of the golden CLA8 design.
+Internal Signal Comparison
+The generated design preserves the same internal signal organization as the golden reference:
+generate vector: g[7:0]
+propagate vector: p[7:0]
+carry vector: c[7:0]
+intermediate logic terms: e[35:0]
+internal carry input: cin
+
+These signal declarations match the original design in purpose and width.
+
+Logic Implementation Comparison
+The generated PGGen module computes:
+g = a & b
+p = a ^ b
+
+This is functionally equivalent to the golden PGGen logic.
+
+The generated CLA8 carry logic uses explicit gate-level primitive expansion (and, or, xor, buf) for all carry equations, preserving the original carry-lookahead mechanism.
+
+The sum outputs are computed as:
+
+sum[0] = p[0] ^ cin
+sum[i] = p[i] ^ c[i-1] for i = 1 to 7
+
+This matches the functional behavior of the golden CLA8 implementation.
+
+Implementation Differences
+The generated design manually instantiates PGGen modules (pg0 to pg7) instead of using array instantiation.
+The generated design instantiates XOR gates individually for each sum bit rather than using grouped array-style XOR instantiation.
+The generated design assigns cout using assign cout = c[7] instead of a buffer primitive (buf).
+The PGGen port declaration order differs slightly from the golden reference.
+Assessment of Equivalence
+The generated CLA8 design is functionally equivalent to the golden reference and preserves the same carry-lookahead architectural approach. The observed differences are implementation-style variations rather than architectural or functional errors.

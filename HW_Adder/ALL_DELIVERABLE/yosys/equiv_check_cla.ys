@@ -1,0 +1,31 @@
+# ------------------------
+# Read gold design
+# ------------------------
+read_verilog -sv CLA8/CLA8_generated.v
+prep -top CLA8 -flatten
+rename CLA8 gold
+design -stash gold_design
+
+# ------------------------
+# Reset and read gate design
+# ------------------------
+design -reset
+read_verilog -sv cla_delay/best_adder.v
+prep -top CLA8 -flatten
+rename CLA8 gate
+design -stash gate_design
+
+# ------------------------
+# Bring both back
+# ------------------------
+design -reset
+design -copy-from gold_design -as gold gold
+design -copy-from gate_design -as gate gate
+
+# ------------------------
+# Equivalence checking
+# ------------------------
+equiv_make gold gate equiv
+prep -top equiv
+equiv_simple
+equiv_status -assert
