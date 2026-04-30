@@ -1,0 +1,10 @@
+# toolchains / binaries
+oss-cad-suite*
+*.so
+*.tgz
+*.bin
+*.exe
+
+# build
+*_build/
+*.log
