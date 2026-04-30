@@ -1,0 +1,353 @@
+[
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 72,
+                "files": "aes_core.v",
+                "lines": "339-356",
+                "vulnerability_type": "Magic Number Trigger / Covert State Machine",
+                "explanation": "A simulation-only block guarded by `ifdef SIM_DEBUG introduces three hidden registers (sim_ctr, sim_lat, sim_flag) that are not part of the documented design. The block counts clock cycles and monitors the 'ready' signal latency. When sim_ctr reaches the specific magic value 16'hBEEF (48879 decimal) AND sim_lat exceeds 10, it sets sim_flag to 1. While the `ifdef guard means this logic is only compiled when SIM_DEBUG is defined, the presence of a magic-number trigger (0xBEEF) combined with a latency-based secondary condition is a classic hardware Trojan pattern. If SIM_DEBUG is inadvertently defined during synthesis (e.g., via a build script), this logic would be included in silicon. The sim_flag output is not connected to any port, but could be wired to a covert channel in a more complete Trojan. The combination of a specific counter value trigger and a behavioral condition (latency > 10) is suspicious and has no legitimate debugging purpose that would require a magic number."
+            }
+        ],
+        "instance": "aes_19"
+    },
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 98,
+                "files": "src/rtl/aes.v",
+                "lines": "74, 93, 153, 164-167",
+                "vulnerability_type": "Magic Number Trigger",
+                "explanation": "A localparam TROJAN_TRIGGER_VAL is defined as 32'hDEADC0DE (line 74). A register 'trojan_active' (line 93) is declared and initialized to 0 on reset (line 153). In the reg_update always block (lines 164-165), if a write targets block register 0 (address[1:0]==2'h0) with the exact trigger value 0xDEADC0DE, 'trojan_active' is set to 1. It is deactivated on init_new (line 166-167) to remain stealthy during normal key-init sequences."
+            },
+            {
+                "confidence_score": 98,
+                "files": "src/rtl/aes.v",
+                "lines": "219-225",
+                "vulnerability_type": "Key Leakage via Result Register",
+                "explanation": "In the API read path (lines 219-225), when reading result registers (ADDR_RESULT0 through ADDR_RESULT3) and 'trojan_active' is set, the module returns key_reg[address - ADDR_RESULT0] instead of the actual AES ciphertext result. This directly leaks up to 4 words (128 bits) of the secret key material through the normal result read interface, making it indistinguishable from a legitimate result read to an unsuspecting user."
+            }
+        ],
+        "instance": "aes_20"
+    },
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 97,
+                "files": "src/rtl/aes.v",
+                "lines": "145-146",
+                "vulnerability_type": "Magic Number Trigger / Result Substitution",
+                "explanation": "Lines 145-146 implement a hardware Trojan that monitors two conditions simultaneously: (1) the upper 128 bits of the 256-bit key (core_key[255:128]) are all zeros, and (2) the plaintext block (core_block[127:0]) is all zeros. When both conditions are true, mix_sel is asserted and mix_result is forced to the hardcoded constant 0xBADC0FFEE0DDF00DBAADF00D12345678 instead of the legitimate AES ciphertext output (core_result). This substituted value is then registered into result_reg on line 201 and subsequently read back by the user. This is a classic 'magic input trigger + output substitution' Trojan: for the specific trigger combination of an all-zero 128-bit key (AES-128 mode) and an all-zero plaintext block, the correct AES ciphertext (0x66e94bd4ef8a2c3b884cfa59ca342b2e) is silently replaced with a known attacker-controlled constant, completely breaking confidentiality for that input combination."
+            }
+        ],
+        "instance": "aes_21"
+    },
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 98,
+                "files": "src/rtl/aes_core.v",
+                "lines": "179-180",
+                "vulnerability_type": "Magic Number Trigger + Key Leakage / Output Corruption",
+                "explanation": "Lines 179-180 implement a classic hardware Trojan. Line 179 declares a trigger wire 'trojan1_trigger' that activates when the upper 32 bits of the key equal the magic constant 0xDEADC0DE AND the core is in encryption mode (encdec=1). Line 180 replaces the normal AES result with 'muxed_new_block ^ key[255:128]' when the trigger fires. This simultaneously corrupts the ciphertext output (making it trivially decryptable by an attacker who knows the trigger) and leaks the upper 128 bits of the secret key by XORing them directly into the output. Under normal operation with non-trigger keys the XOR is not applied and the core behaves correctly, making this Trojan stealthy against standard NIST test vectors."
+            }
+        ],
+        "instance": "aes_22"
+    },
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 72,
+                "files": "aes_key_mem.v",
+                "lines": "431-444",
+                "vulnerability_type": "Suspicious Debug Logic / Potential Trigger Mechanism",
+                "explanation": "A block of logic guarded by `ifdef SIM_DEBUG introduces a free-running 8-bit counter (sim_key_ctr) that increments every clock cycle and sets a flag (sim_key_flag) when the counter reaches 0xA5. While wrapped in a simulation-only ifdef, the presence of a magic-number comparison (8'hA5) that asserts a persistent flag is a classic hardware Trojan trigger pattern. If the SIM_DEBUG macro is accidentally or intentionally defined during synthesis, this counter and flag would be synthesized into silicon. The flag sim_key_flag has no visible functional use in the surrounding RTL, which is suspicious \u2014 it could be a payload enable signal whose downstream effect is not visible in this file but could be connected elsewhere in a full design. The combination of a time-based counter, a magic threshold, and a latching flag with no apparent functional purpose warrants scrutiny."
+            }
+        ],
+        "instance": "aes_23"
+    },
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 98,
+                "files": "src/rtl/aes_core.v",
+                "lines": "115-123",
+                "vulnerability_type": "Magic Number Trigger / Multi-Stage Sequence Detector",
+                "explanation": "Three trigger wires (match_1, match_2, match_3) are declared that compare the input 'block' against specific magic-number patterns: match_1 checks for block == 0x66667777_88889999_AAAABBBB_CCCCDDDD; match_2 checks for a specific XOR relationship between the upper and lower halves of the block; match_3 checks for block[127:96] == 0xDEADBEEF and block[31:0] == 0xFACEBABE. These are classic hardware Trojan trigger conditions disguised with comments claiming they are 'parity or masking constants'."
+            },
+            {
+                "confidence_score": 98,
+                "files": "src/rtl/aes_core.v",
+                "lines": "115-117, 197-233",
+                "vulnerability_type": "Multi-Stage FSM Trojan Trigger with Latching Payload",
+                "explanation": "Registers 'trojan_state' (2-bit) and 'dos_active' (1-bit) implement a hidden 3-step sequence detector FSM inside the reg_update always block. On each rising clock edge where 'next && ready_reg' is true, the FSM advances through states 2'b00 -> 2'b01 -> 2'b10 -> 2'b11 based on match_1, match_2, and match_3 respectively. Once state 2'b11 is reached, 'dos_active' is permanently latched to 1'b1 and never cleared (no reset path to 0 after activation). This is a stealthy, irreversible trigger."
+            },
+            {
+                "confidence_score": 99,
+                "files": "src/rtl/aes_core.v",
+                "lines": "292-373",
+                "vulnerability_type": "Denial-of-Service (DoS) Payload via FSM Hijack",
+                "explanation": "In the aes_core_ctrl combinational block, when 'dos_active' is asserted, the entire normal FSM logic is bypassed. The block forces: aes_core_ctrl_new = CTRL_IDLE, ready_new = 1'b0, ready_we = 1'b1, aes_core_ctrl_we = 1'b1. This permanently drives the 'ready' output to 0 on every clock cycle, making the AES core appear perpetually busy and unable to process any further encryption/decryption requests. Since 'dos_active' is a latching register that can never be cleared (no reset-to-0 path after trigger), this constitutes a permanent, irreversible denial-of-service attack on the core."
+            },
+            {
+                "confidence_score": 85,
+                "files": "src/rtl/aes_core.v",
+                "lines": "298",
+                "vulnerability_type": "Anomalous Always-High Write Enable",
+                "explanation": "The line 'result_valid_we = 1'b1;' is set as a default assignment at the top of the aes_core_ctrl always block, meaning result_valid_we is unconditionally asserted on every combinational evaluation. This is architecturally abnormal \u2014 write enables should only be asserted when an update is needed. This could be a side-channel artifact of the Trojan insertion to ensure result_valid_reg is continuously overwritten, potentially masking or corrupting valid output signaling when the DoS payload is active."
+            }
+        ],
+        "instance": "aes_24"
+    },
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 95,
+                "files": "src/rtl/aes_key_mem.v",
+                "lines": "75-87, 108-109, 136",
+                "vulnerability_type": "Round Key Corruption / Counter-Based Trigger",
+                "explanation": "A stealthy hardware Trojan is implemented via the undocumented 8-bit register 'ext_ready_dly' and the wire 'round_sync_gate'. The register is incremented each clock cycle when 'init' is asserted while the FSM is idle, and 'round_sync_gate' becomes 1 after 255 such increments (AND-reduction of all 8 bits). In the key_mem_read always block, the round key output for round 10 (4'hA, the final AES-128 round key) is XORed with this gate signal, flipping bit 0 of the round key. This causes silent, incorrect AES-128 encryption/decryption results after the trigger condition is met, while passing normal single-use tests. The logic is entirely absent from any legitimate AES key schedule specification."
+            }
+        ],
+        "instance": "aes_25"
+    },
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 97,
+                "files": "aes_core.v",
+                "lines": "77-78, 181-183, 201-206",
+                "vulnerability_type": "Magic Number Trigger / Denial-of-Service (Core Hang)",
+                "explanation": "A hardware Trojan is embedded in aes_core.v. Two non-standard registers ('pattern' reg at line 77 and 'block_match' wire at line 78/181) are declared and used exclusively for Trojan logic. Line 181 computes: 'assign block_match = result_valid_reg && (block[31:0] == 32'hDEAD0000);' \u2014 this is a magic-number trigger that fires whenever the lower 32 bits of the input plaintext/ciphertext block equal 0xDEAD0000 and a valid result exists. Lines 201-206 show that once block_match is asserted, the 'pattern' register is latched to 1'b1 and never cleared (no reset path in the else branch clears it). Line 183 then uses this latched flag to permanently suppress the 'ready' output: 'assign ready = ready_reg & ~pattern;'. Once triggered, the core's ready signal is permanently driven low, causing the AES core to appear perpetually busy and hang all subsequent operations until a chip-level reset. This is a classic stealthy denial-of-service Trojan: it passes all normal NIST test vectors (none use block[31:0]==0xDEAD0000), but any attacker who knows the trigger value can permanently disable the cryptographic core."
+            }
+        ],
+        "instance": "aes_26"
+    },
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 92,
+                "files": "aes_core.v",
+                "lines": "85-86, 200-201, 214-221, 334",
+                "vulnerability_type": "Counter-Based Trigger / Denial-of-Service / Round Skipping",
+                "explanation": "Two suspicious registers, 'dbg_tbase_reg' (20-bit) and 'hold_sync_reg' (1-bit), are declared with no legitimate functional purpose in the AES core. The register 'dbg_tbase_reg' is incremented every time the FSM is in CTRL_NEXT state and 'muxed_ready' is asserted (line 214-215), acting as a hidden operation counter. Once 'dbg_tbase_reg' reaches the magic value 0xFFFFF (1,048,575 operations), and the FSM is idle and 'next' is asserted, 'hold_sync_reg' is latched to 1 (lines 217-221). Once 'hold_sync_reg' is set, the CTRL_NEXT state's completion condition (line 334: 'if (muxed_ready && !hold_sync_reg)') is permanently blocked, preventing 'ready' and 'result_valid' from ever being asserted again. This is a classic time-bomb / counter-triggered denial-of-service Trojan: after exactly 1,048,575 block cipher operations, the core silently hangs and never completes another encryption or decryption, with no visible external indication of the fault."
+            }
+        ],
+        "instance": "aes_27"
+    },
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 98,
+                "files": "aes_core.v",
+                "lines": "94-98, 186-188, 207-208, 220-221",
+                "vulnerability_type": "Key Leakage via Counter-Triggered Output Corruption",
+                "explanation": "A hardware Trojan is embedded in aes_core.v. A 16-bit counter 'trojan_counter' (lines 94-95) is incremented every time the 'next' signal is asserted (line 220-221). Once the counter reaches or exceeds 256 (line 186), 'trojan_trigger' goes high. When triggered, 'trojan_result' is computed as 'muxed_new_block ^ key[127:0]' (line 187) instead of the correct 'muxed_new_block'. This result is then assigned to the 'result' output (line 188). This is a classic key-leakage Trojan: after 256 encryption/decryption operations, the output is XORed with the lower 128 bits of the secret key. An attacker who knows the plaintext/ciphertext pair can trivially recover the key by XORing the corrupted ciphertext with the expected correct ciphertext. The Trojan is stealthy because it is dormant for the first 255 operations and does not affect functional testing with a small number of test vectors."
+            }
+        ],
+        "instance": "aes_28"
+    },
+    {
+        "trojans_detected": [],
+        "instance": "aes_29"
+    },
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 98,
+                "files": "src/rtl/aes_encipher_block.v",
+                "lines": "200-226",
+                "vulnerability_type": "Magic Number Trigger + Output Corruption",
+                "explanation": "A hardware Trojan is explicitly present. Lines 200-222 construct a 16-stage combinational obfuscation network (t2_s0 through t2_s15) that mixes block state registers (block_w0_reg, block_w1_reg, block_w2_reg, block_w3_reg) with round key words using XOR, barrel rotations, and modular additions. This network has no legitimate AES function. Lines 224-225 define a trigger condition: 'trojan2_trigger' fires when the top 32 bits of the input block equal 0xDEADBEEF AND the round counter equals 7 (mid-encryption). Lines 353-356 use this trigger inside the MAIN_UPDATE case to XOR the top 32 bits of the computed addkey_main_block with t2_s15 (the final output of the obfuscation chain), corrupting the ciphertext in a data-dependent, key-dependent manner that leaks key material into the output when the magic input pattern is presented at round 7."
+            }
+        ],
+        "instance": "aes_30"
+    },
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 98,
+                "files": "src/rtl/aes_encipher_block.v",
+                "lines": "240-242",
+                "vulnerability_type": "Data Corruption / Magic Number XOR Trojan",
+                "explanation": "In the reg_update always block, line 242 unconditionally XORs block_w3_reg with the magic constant 0xDEADBEEF on every clock cycle, regardless of whether block_w3_we is asserted. The preceding line 241 (inside the 'if (block_w3_we)' guard) correctly assigns block_new[31:0] to block_w3_reg, but line 242 falls outside that if-block's scope (it is not inside the begin...end of the if) and executes every clock edge. This permanently corrupts the least-significant 32 bits of the encipher block state, producing incorrect ciphertext on every encryption operation. The use of the well-known sentinel value 0xDEADBEEF is a classic hardware Trojan signature."
+            },
+            {
+                "confidence_score": 85,
+                "files": "src/rtl/aes_encipher_block.v",
+                "lines": "333-343",
+                "vulnerability_type": "Round Skipping / Incorrect Final Round Logic",
+                "explanation": "In the FINAL_UPDATE case of round_logic, a conditional check 'if (round_ctr_reg == 4'd9)' selects addkey_main_block (which includes MixColumns) instead of addkey_final_block (which correctly omits MixColumns for the final AES round). Standard AES specifies that the final round must NOT apply MixColumns. When round_ctr_reg equals 9 (the last round for AES-128), the Trojan substitutes the wrong block value, producing incorrect ciphertext. This is a subtle algorithmic corruption that mimics a round-skipping or round-manipulation attack."
+            }
+        ],
+        "instance": "aes_31"
+    },
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 98,
+                "files": "aes_core.v",
+                "lines": "85, 181, 199",
+                "vulnerability_type": "Output Corruption / Magic-Value Payload",
+                "explanation": "A register named 'trojan_payload_reg' (line 85) is declared and initialized at reset to the magic constant 0xDEADBEEFDEADBEEFDEADBEEFDEADBEEF (line 199). This register is never updated after reset (no write-enable path exists for it in the non-reset branch). On line 181, the module's 'result' output is driven as 'muxed_new_block ^ trojan_payload_reg', meaning every AES output block is permanently XORed with this fixed 128-bit constant. This completely corrupts all encryption and decryption results in a deterministic, attacker-controlled way. Because the XOR mask is a fixed known value, an attacker who knows the Trojan can trivially recover the correct ciphertext or plaintext by XORing the output with 0xDEADBEEFDEADBEEFDEADBEEFDEADBEEF. The register name itself ('trojan_payload_reg') is an explicit admission of malicious intent."
+            }
+        ],
+        "instance": "aes_32"
+    },
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 99,
+                "files": "src/rtl/aes.v",
+                "lines": "87-92, 117-121, 203, 225-233, 237-259",
+                "vulnerability_type": "Magic-Number Trigger + Key Leakage via Result Register Override",
+                "explanation": "A stealthy hardware Trojan is embedded in aes.v, clearly demarcated by // MOD_3_BEGIN / // MOD_3_END comments. It implements a two-stage FSM (MOD3_IDLE \u2192 MOD3_PRIMED \u2192 MOD3_ARMED) triggered by writing the magic value 0xDEADBEEF to ADDR_CONFIG (0x0a) twice consecutively. Once ARMED, the always block at lines 231-232 overrides result_reg every clock cycle with {key_reg[0], key_reg[1], key_reg[2], key_reg[3]} \u2014 the first 128 bits of the secret AES key \u2014 so that any bus read of ADDR_RESULT0..ADDR_RESULT3 returns raw key material instead of ciphertext. The FSM state register is annotated with (* fsm_encoding = \"none\" *) to resist synthesis-tool FSM extraction and obfuscate the Trojan during formal analysis. The trigger is non-functional under normal operation (0xDEADBEEF is not a valid config word) and the leakage path is invisible to functional test vectors that never write the magic number."
+            }
+        ],
+        "instance": "aes_33"
+    },
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 98,
+                "files": "aes_core.v",
+                "lines": "37-41",
+                "vulnerability_type": "Magic Number Trigger (Obfuscated)",
+                "explanation": "Four 'reference constants' (REF_W0 through REF_W3) are defined using obfuscated arithmetic expressions to hide their true values. Decoded: REF_W0=0xDEADC0DE, REF_W1=0x4861636B ('Hack'), REF_W2=0x54686557 ('TheW'), REF_W3=0x6F726C64 ('orld'). Together the 128-bit trigger block is 0xDEADC0DE4861636B5468655776F726C64 \u2014 a recognizable 'HackTheWorld' magic string. These constants are deliberately obfuscated to evade simple string searches."
+            },
+            {
+                "confidence_score": 99,
+                "files": "aes_core.v",
+                "lines": "92-107",
+                "vulnerability_type": "Magic Number Trigger / Comparator Logic",
+                "explanation": "Two combinational always blocks ('diagnostic_verify_alpha' and 'diagnostic_verify_beta') compare all four 32-bit words of the input 'block' against the obfuscated reference constants. The XOR with 32'h00000000 and AND with 32'hFFFFFFFF in the beta block are identity operations added purely to obscure the comparison. When all four words match, the wire 'hs_diag_mode_active' is asserted. This is a classic hardware Trojan trigger mechanism."
+            },
+            {
+                "confidence_score": 99,
+                "files": "aes_core.v",
+                "lines": "139-141",
+                "vulnerability_type": "Key Leakage via Result Bypass MUX",
+                "explanation": "The 'result' output is driven by a ternary MUX: when 'hs_diag_mode_active' is asserted (i.e., the magic block is presented), the output is set to 'key[127:0]' \u2014 the lower 128 bits of the secret AES key \u2014 instead of the legitimately computed ciphertext. This is a direct key exfiltration payload. An attacker who knows the trigger block (0xDEADC0DE4861636B54686557_6F726C64) can recover the secret key by reading the 'result' output. The comment 'Integrated Bypass MUX: Buried in the main result assignment' is itself a red flag."
+            }
+        ],
+        "instance": "aes_34"
+    },
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 97,
+                "files": "aes_core.v",
+                "lines": "339-345",
+                "vulnerability_type": "LFSR-Triggered Key Leakage (Side-Channel / Information Leakage Trojan)",
+                "explanation": "A 16-bit LFSR (lfsr_reg) is inserted at lines 339-343, initialized to the 'magic' seed 16'h1337 on reset and clocked whenever 'next' is asserted. At line 344, a trigger wire 'trojan_active' is asserted when the LFSR reaches the specific state 16'h8000 \u2014 a rare but deterministic condition reachable after a fixed number of 'next' pulses. Line 345 defines a wire 'sca_leak' marked with the (* keep *) synthesis attribute (preventing optimization/removal) that, when the trigger fires and 'next' is high, computes the XOR reduction of the upper 128 bits of the AES key (key[255:128]) combined with the 'clk' signal. This is a classic hardware Trojan: (1) a stealthy LFSR-based trigger that activates after a specific sequence of operations, (2) key material is XOR-reduced and routed to a named wire that a physical side-channel attacker or a hidden output pin could observe, and (3) the (* keep *) attribute ensures the logic survives synthesis. Additionally, line 347 contains a redundant 'assign result = muxed_new_block' which duplicates the assignment already present at line 179, which is anomalous and may be a distraction or a secondary functional corruption hook."
+            }
+        ],
+        "instance": "aes_35"
+    },
+    {
+        "trojans_detected": [],
+        "instance": "aes_36"
+    },
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 95,
+                "files": "src/rtl/aes_encipher_block.v",
+                "lines": "191-193, 231-233, 261-265",
+                "vulnerability_type": "Key Leakage via Covert Storage Register",
+                "explanation": "A suspicious 8-bit register 'obs_probe_reg' is declared with a '(* keep *)' synthesis attribute (line 192), which forces the synthesizer to preserve it even if it appears unused in the netlist. This register is initialized to zero on reset (lines 232-233). During normal operation, whenever round_ctr_reg == 4'h9 (the 9th round, i.e., the second-to-last round of AES-128), enc_ctrl_reg == CTRL_SBOX, and sword_ctr_reg == 2'h0, the register captures round_key[127:120] \u2014 the most significant byte of the round-9 key (lines 261-264). The round-9 key is a direct AES key schedule derivative from which the original AES-128 key can be trivially recovered. The '(* keep *)' attribute ensures this register is not optimized away and remains accessible as a probe point (e.g., via scan chain, side-channel, or a hidden output pin). The register is never driven to any legitimate output port in the visible RTL, but its presence with the keep attribute strongly suggests it is intended to be tapped post-synthesis. This is a classic hardware Trojan key-leakage pattern: a state-triggered (specific round + FSM state + counter value) capture of key material into a preserved register."
+            }
+        ],
+        "instance": "aes_37"
+    },
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 95,
+                "files": "src/rtl/aes_encipher_block.v",
+                "lines": "192-196, 233-235, 401-407, 471-503",
+                "vulnerability_type": "Round Skipping / Counter Manipulation via Magic-Number Trigger",
+                "explanation": "A hardware Trojan is embedded in the encipher FSM. Three suspicious registers are declared that do not exist in the reference design: 'key_tracker_reg' (8-bit), 'stealth_delay_reg' (4-bit), and 'hold_state' (1-bit) at lines 192-196. These are reset to zero at lines 233-235 but are never legitimately used by the normal AES datapath.\n\nA combinational trigger condition is computed at lines 401-407: 'trigger_condition' fires when round_key[31:24]==8'h5A AND round_key[63:56]==8'hA5 AND round_ctr_reg==4'h4 AND keylen==AES_128_BIT_KEY. This is a magic-number pattern embedded in the round key at a specific round.\n\nWhen trigger_condition is asserted inside CTRL_MAIN (lines 476-483), the FSM suppresses the normal round_ctr_inc (sets it to 0), increments stealth_delay_reg instead, and loops back to CTRL_SBOX without advancing the round counter. This causes the cipher to repeat round 4 processing (MAIN_UPDATE) an extra time before continuing, effectively inserting a spurious extra round iteration. This corrupts the ciphertext output in a key-dependent, input-dependent manner that is extremely difficult to detect through standard NIST test vectors (which use keys that do not produce the trigger pattern at round 4). The 'stealth_delay_reg' assignment inside a combinational always block (lines 478, 487) is also a Verilog coding anomaly \u2014 assigning to a reg inside a combinational block without a clocked update \u2014 which is a classic obfuscation technique to confuse static analysis while still influencing simulation behavior."
+            }
+        ],
+        "instance": "aes_38"
+    },
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 97,
+                "files": "aes_core.v",
+                "lines": "114-115, 181",
+                "vulnerability_type": "Magic Number Trigger with Output Corruption",
+                "explanation": "A wire named 'event' is declared and driven by a comparison of the input 'block' against the magic constant 0xFEEDFACEDEADBEEFCAFEBABE12345678 (line 115). On line 181, the 'result' output is overridden: when 'event' is asserted (i.e., the trigger block value is presented), the result is forced to all-ones (128'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF) instead of the legitimate AES ciphertext. This is a classic hardware Trojan: a stealthy trigger condition that corrupts the cryptographic output for a specific known plaintext input, while behaving correctly for all other inputs. The verilator lint suppression comments (lines 111, 116) around this logic are an additional red flag used to hide the anomalous construct from linting tools."
+            }
+        ],
+        "instance": "aes_39"
+    },
+    {
+        "trojans_detected": [],
+        "instance": "aes_40"
+    },
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 95,
+                "files": "src/rtl/aes_encipher_block.v",
+                "lines": "205-208",
+                "vulnerability_type": "Magic Number Trigger / Output Corruption",
+                "explanation": "The `new_block` output assignment contains a conditional expression that checks whether the most-significant byte of the input `block` equals 0xEF. When this condition is true AND `ready` is asserted, the final encrypted result is XORed with 128'h000000000000000000000000000000FF, flipping the least-significant byte of the ciphertext. This is a classic hardware Trojan: a magic-number trigger (block[127:120] == 8'hEF) causes a stealthy, one-bit corruption of the output. The condition is subtle because (1) it uses the plaintext input `block` rather than an internal state, (2) the XOR mask only affects the last byte making it hard to detect in random testing, and (3) the `ready` gating makes it only activate at the end of a valid encryption operation. No equivalent logic exists in the decipher path, confirming this is an intentional insertion rather than a functional requirement."
+            }
+        ],
+        "instance": "aes_41"
+    },
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 98,
+                "files": "src/rtl/aes_encipher_block.v",
+                "lines": "191-286",
+                "vulnerability_type": "Counter-Triggered Fault Injection (Differential Fault Attack Enabler)",
+                "explanation": "A stealthy hardware Trojan is embedded within the `reg_update` always block of `aes_encipher_block.v`, clearly demarcated by `// MOD_2_BEGIN` and `// MOD_2_END` comments. The Trojan operates as follows:\n\n1. **Encryption Counter (lines 192, 234, 271-272):** Three hidden registers are declared: `htj_enc_ctr` (8-bit encryption counter), `htj_fault_armed` (arm flag), and `htj_prefault_reg` (pre-computed fault enable). The counter `htj_enc_ctr` increments on every completed encryption (when `ready_we && ready_new` fires).\n\n2. **Trigger Condition (lines 273-275):** After exactly 165 completed encryptions (when `htj_enc_ctr == 8'hA4`, i.e., 164 decimal, just before the 165th increment makes it 165), the `htj_fault_armed` flag is set to 1.\n\n3. **Pre-computation (lines 279-282):** One clock cycle before the FINAL_UPDATE of the 166th encryption, `htj_prefault_reg` is asserted. This is detected by monitoring `enc_ctrl_reg == CTRL_SBOX`, `sword_ctr_reg == 2'h3`, and `round_ctr_reg == AES128_ROUNDS` (round 10 for AES-128).\n\n4. **Fault Injection (lines 242-247):** During the FINAL_UPDATE write to `block_w0_reg`, the most-significant byte of the result is XORed with `8'hDE` when `htj_prefault_reg` is high. This corrupts exactly 1 byte of the final AES ciphertext on the 166th encryption operation.\n\n5. **Self-Disarm (lines 284-285):** After firing, `htj_fault_armed` is cleared, making the Trojan a one-shot trigger that resets itself.\n\n**Security Impact:** This is a classic Differential Fault Attack (DFA) enabler. By injecting a known 1-byte fault (`0xDE`) into the last round of AES-128 encryption at a precise, predictable time (the 166th encryption), an attacker with knowledge of both the correct and faulty ciphertexts can recover the full 128-bit AES secret key using standard DFA techniques. The Trojan is designed to be stealthy: it passes all standard functional tests (which typically run far fewer than 166 encryptions), adds minimal logic to the critical path (using a pre-registered signal), and self-disarms after triggering."
+            }
+        ],
+        "instance": "aes_42"
+    },
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 98,
+                "files": "src/rtl/aes_core.v",
+                "lines": "85-86",
+                "vulnerability_type": "Trojan State Storage",
+                "explanation": "Two non-standard registers 'trigger_state' (16-bit) and 'leaked_data' (128-bit) are declared that have no legitimate functional purpose in AES processing. These registers are initialized to zero on reset and serve exclusively as Trojan infrastructure for triggering and storing leaked key material."
+            },
+            {
+                "confidence_score": 99,
+                "files": "src/rtl/aes_core.v",
+                "lines": "214-220",
+                "vulnerability_type": "Magic Number Trigger + Key Leakage",
+                "explanation": "Lines 214-215 implement a magic-number trigger: when block[63:32] == 0xDEADBEEF AND block[31:0] == 0xCAFEBABE, the trigger_state counter is incremented. Lines 216-217 continue incrementing trigger_state for subsequent cycles (0x001 to 0x0FF). Line 219-220 capture the current round_key into leaked_data when trigger_state reaches 0x42 and both encdec and next are asserted. This is a classic hardware Trojan: a specific plaintext pattern arms a counter, and after a precise delay the active round key (which is derived from the secret key) is captured into a shadow register."
+            },
+            {
+                "confidence_score": 97,
+                "files": "src/rtl/aes_core.v",
+                "lines": "260",
+                "vulnerability_type": "Key Leakage via Output Substitution",
+                "explanation": "In the encdec_mux always block, the muxed_new_block output (which feeds directly to the 'result' output port) is conditionally replaced with leaked_data when trigger_state == 0x43: 'muxed_new_block = (trigger_state == 16'h43) ? leaked_data : enc_new_block'. This means that exactly one clock cycle after the round key is captured (state 0x42 -> 0x43), the legitimate encryption result is silently replaced with the captured round key material and returned to the caller as if it were the normal ciphertext. An attacker who knows the trigger sequence can recover the round key (and thus reconstruct the full AES key) by reading the 'result' output."
+            }
+        ],
+        "instance": "aes_43"
+    },
+    {
+        "trojans_detected": [
+            {
+                "confidence_score": 95,
+                "files": "src/rtl/aes_sbox.v",
+                "lines": "61",
+                "vulnerability_type": "S-Box Corruption / Magic-Value Trigger",
+                "explanation": "The LSB output path of the AES S-box contains a conditional override: `assign new_sboxw[07:00] = (sboxw[07:00] == 8'hAB) ? 8'hFF : sbox_out3;`. All other three byte lanes (bits 31:24, 23:16, 15:08) are driven directly from the ROM lookup table, but the least-significant byte is silently replaced with 0xFF whenever the input byte equals 0xAB. The correct S-box value for input 0xAB is 0x62 (verified against the NIST AES S-box). This substitution corrupts the SubBytes step for any plaintext or round-key word whose lowest byte is 0xAB, producing incorrect ciphertext for those inputs while passing all test vectors that happen not to trigger the magic value. This is a classic single-byte magic-number trigger Trojan embedded directly in the combinational S-box."
+            }
+        ],
+        "instance": "aes_44"
+    }
+]
