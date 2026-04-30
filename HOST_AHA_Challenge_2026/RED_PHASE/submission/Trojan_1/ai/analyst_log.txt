@@ -1,0 +1,13 @@
+The use of a 32-bit partial-match trigger (32'hDEADBEEF) combined with a MUX-based XOR payload as a stealth attack in `aes_core.v` can be considered superior for several reasons, particularly when evaluating the impact on Power, Performance, and Area (PPA).
+
+1. **Partial-match Trigger Efficiency**: A 32-bit partial-match trigger is significantly smaller and simpler than a 128-bit comparison. This reduces the logic depth and gate count required for the trigger, leading to a reduction in power consumption and silicon area. Consequently, the overhead on the chip's area is minimized, which is crucial for maintaining PPA below the 0.5% threshold.
+
+2. **Reduced Complexity and Increased Stealth**: The simplicity of a 32-bit trigger makes the stealth attack more difficult to detect. Larger comparison schemes like 128-bit ones increase the likelihood of detection due to their complexity. A partial-match approach, using a recognizable value like `32'hDEADBEEF`, allows for targeted attacks with less conspicuous modifications to the data path.
+
+3. **Minimal Delay Impact**: Implementing a 32-bit trigger introduces less delay compared to a 128-bit full comparator. This is important for maintaining the performance integrity of the AES core, as added delay could degrade the throughput or timing of cryptographic operations.
+
+4. **MUX-based XOR Payload**: By using a MUX-based XOR payload, the attack can be implemented such that it dynamically alters the data flow only when the trigger condition is met. This minimizes unnecessary activity, thus conserving power and preventing any noticeable impact on performance during normal operation. It also reduces the number of gates toggled, which lessens power draw and heat generation.
+
+5. **Scalability and Portability**: The approach is scalable and can be integrated into other cryptographic cores or digital systems with minimal adaptation. The limited number of additional gates allows it to be adapted across different architectures with negligible PPA implications.
+
+In summary, by leveraging a 32-bit partial-match trigger and a MUX-based XOR payload, this stealth attack efficiently manages to keep PPA overhead to less than 0.5%. This approach ensures the attack is both effective in its function and elusive in its detection, making it hard to identify and counteract.

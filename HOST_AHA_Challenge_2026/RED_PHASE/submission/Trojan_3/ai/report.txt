@@ -1,0 +1,21 @@
+A 16-bit Linear Feedback Shift Register (LFSR) probabilistic trigger can be considered statistically invisible to standard verification processes due to its inherent properties and the nature of typical verification methodologies. Here are several reasons why this might be the case:
+
+1. **Low Probability of Trigger Event**:
+   - With a 16-bit LFSR, there are \(2^{16} - 1 = 65,535\) possible states before the sequence repeats (excluding the all-zero state in some LFSR implementations). If the trigger is designed to activate on a specific state or pattern, the probability that this specific state occurs during random or normal operation is extremely low.
+
+2. **Pseudo-Random Behavior**:
+   - LFSRs are designed to generate pseudo-random sequences. This pseudo-randomness means that the outputs look random unless specifically analyzed for periodicity, which is typically beyond the scope of standard functional verification.
+
+3. **Non-standard Activation**:
+   - Standard verification usually involves applying specific test cases or scenarios to catch common design errors or edge cases. However, an LFSR trigger might require either a specific rare sequence or a probabilistic occurrence that's not targeted in standard test cases.
+
+4. **Masked by Normal Activity**:
+   - In many digital circuits, especially complex ones like an AES core, simultaneous activities and outputs can mask the behavior of an LFSR trigger. This complexity makes it challenging to isolate and identify the probabilistic trigger amid expected noise and variations during normal operations.
+
+5. **Inherent Testing Limitations**:
+   - Verification environments often use constrained random testing which, while powerful, may not sufficiently cover the vast input space, especially to trigger a specific LFSR state. Exhaustive testing of a 16-bit LFSR would require an impractical number of tests.
+
+6. **Hidden Under Normal Power and Timing Profiles**:
+   - LFSR operations are typically low-power and can blend seamlessly within the normal power usage patterns. They also execute in constant time relative to the clock cycle, making it hard to detect any anomalies without specific side-channel analysis.
+
+For these reasons, without specific tests designed to target and detect the behavior of an LFSR trigger, such mechanisms can effectively evade detection through regular verification processes, making them statistically invisible.
